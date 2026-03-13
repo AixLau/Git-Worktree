@@ -1,128 +1,134 @@
 # Git Worktree
 
-`Git Worktree` is an IntelliJ IDEA plugin for managing Git worktrees without leaving the IDE.
+`Git Worktree` 是一个 IntelliJ IDEA 插件，用来在 IDE 内直接管理 Git worktree。
 
-## Features
+## 功能概览
 
-- Create a worktree from the current repository
-- Create a worktree from the Git branches popup
-- Create a worktree from a selected VCS Log commit
-- View all worktrees in a dedicated tool window
-- Remove, lock, and unlock worktrees
-- Quickly open another worktree as a project
-- Compare the current file with the same file in another worktree
-- Configure default path templates and post-create actions
-- Optionally copy `.idea` and files listed in `.worktree-copy`
-- Optionally run an external command after worktree creation
+- 在当前仓库中创建 worktree
+- 从 Git 分支弹窗中直接创建 worktree
+- 从 VCS Log 选中的提交创建 worktree
+- 在独立工具窗口中查看所有 worktree
+- 删除、锁定、解锁 worktree
+- 将其他 worktree 快速作为项目打开
+- 将当前文件与其他 worktree 中的同名文件进行对比
+- 配置默认路径模板和创建后默认行为
+- 可选复制 `.idea` 和 `.worktree-copy` 中声明的文件
+- 可选在创建后执行外部命令
 
-## Compatibility
+## 兼容性
 
 - IntelliJ IDEA `2025.3`
-- Build range `253.*`
+- Build 范围 `253.*`
 - Java `21`
 
-## Install
+## 安装方式
 
-1. Build or download the plugin ZIP.
-2. In IntelliJ IDEA, open `Settings` > `Plugins`.
-3. Click the gear icon, then `Install Plugin from Disk...`.
-4. Select the built ZIP package.
-5. Restart IntelliJ IDEA.
+1. 构建或获取插件 ZIP 包。
+2. 在 IntelliJ IDEA 中打开 `Settings` > `Plugins`。
+3. 点击右上角齿轮图标，选择 `Install Plugin from Disk...`。
+4. 选择插件 ZIP 文件。
+5. 重启 IntelliJ IDEA。
 
-Current local build artifact:
+当前本地产物：
 
 - `build/distributions/git-worktree-intellij-1.0.0.zip`
 
-## Main Entry Points
+## 入口位置
 
-- `Git` menu > `Worktree`
-- Git branches popup > `Create Worktree...`
-- VCS Log context menu > `Create Worktree...`
-- Tool window: `Git Worktree`
-- Editor / Project View context menu > `Compare With Worktree...`
+- `Git` 菜单 > `Worktree`
+- Git 分支弹窗 > `Create Worktree...`
+- VCS Log 右键菜单 > `Create Worktree...`
+- 工具窗口：`Git Worktree`
+- 编辑器 / Project View 右键菜单 > `Compare With Worktree...`
 
-## Usage
+## 使用说明
 
-### Create a worktree
+### 创建 worktree
 
-1. Open a Git repository in IntelliJ IDEA.
-2. Trigger `Create Worktree...` from one of the plugin entry points.
-3. Choose the source:
+1. 在 IntelliJ IDEA 中打开一个 Git 仓库。
+2. 从任一插件入口触发 `Create Worktree...`。
+3. 选择来源：
    - `HEAD`
-   - local branch
-   - remote branch
-   - commit
-   - tag
-4. Confirm the target path.
-5. Optionally enable:
-   - create a new branch
-   - lock after creation
-   - copy `.idea`
-   - copy `.worktree-copy` files
-   - run an external tool
-   - open the worktree as a project
+   - 本地分支
+   - 远程分支
+   - 提交
+   - 标签
+4. 确认目标路径。
+5. 可选启用：
+   - 创建新分支
+   - 创建后锁定
+   - 复制 `.idea`
+   - 复制 `.worktree-copy` 文件
+   - 运行外部工具
+   - 创建后作为项目打开
 
-### Worktree tool window
+### Worktree 工具窗口
 
-The tool window shows repositories and their worktrees. From there you can:
+工具窗口会按仓库列出 worktree。你可以在这里：
 
-- refresh
-- remove a worktree
-- lock or unlock a worktree
-- double-click to open a worktree project
+- 刷新列表
+- 删除 worktree
+- 锁定或解锁 worktree
+- 双击某个 worktree 直接作为项目打开
 
-### Compare files across worktrees
+### 跨 worktree 文件对比
 
-Open a file, then use `Compare With Worktree...` to diff it with the matching file in another worktree from the same repository.
+打开一个文件后，执行 `Compare With Worktree...`，即可将当前文件与同仓库其他 worktree 中的对应文件进行 diff。
 
-## Default Path Behavior
+## 默认路径规则
 
-The default target path is a sibling directory of the current repository:
+默认目标路径会创建在当前仓库的同级目录下：
 
-- pattern: `../{repo}-{branch}`
-- example: `/path/to/agent-flow` + branch `main` -> `/path/to/agent-flow-main`
+- 模板：`../{repo}-{branch}`
+- 例如：`/path/to/agent-flow` + 分支 `main` -> `/path/to/agent-flow-main`
 
-Branch names used in paths are normalized for a single directory name:
+用于路径的分支名会被规整为单层目录名：
 
-- `feature/demo` becomes `feature-demo`
+- `feature/demo` 会变成 `feature-demo`
 
-You can override the template in:
+你也可以在这里修改模板：
 
 - `Settings` > `Tools` > `Git Worktree`
 
-## Remote Branch Behavior
+## 远程分支创建规则
 
-When creating a worktree from a remote branch such as `origin/main`, the plugin avoids detached HEAD by preparing a local branch first.
+当你从远程分支，例如 `origin/main`，创建 worktree 时，插件会尽量避免出现 detached HEAD。
 
-Behavior:
+行为如下：
 
-1. Fetch the remote to refresh remote tracking refs.
-2. If a same-name local branch does not exist, create it from the remote branch and create the worktree.
-3. If a same-name local branch exists and is not checked out by another worktree, fast-forward it to the remote branch and use it for the new worktree.
-4. If that local branch is already occupied by another worktree, or cannot be safely fast-forwarded, automatically create a derived local branch such as `main-worktree` and create the worktree from the remote branch.
+1. 先执行 `fetch`，刷新远程跟踪分支。
+2. 如果本地不存在同名分支，则先基于远程分支创建本地分支，再创建 worktree。
+3. 如果本地已存在同名分支，且没有被其他 worktree 占用，则先 fast-forward 到远程最新提交，再复用该本地分支创建 worktree。
+4. 如果该本地分支已经被其他 worktree 占用，或者不能安全 fast-forward，则自动派生一个新本地分支，例如 `main-worktree`，再创建 worktree。
 
-This avoids the common `detached HEAD` outcome of running `git worktree add <path> origin/main` directly.
+这样可以避免直接执行：
 
-## Settings
+```bash
+git worktree add <path> origin/main
+```
 
-Project-level settings include:
+导致的 detached HEAD。
 
-- default path template
-- copy `.idea` by default
-- copy `.worktree-copy` files by default
-- open after creation by default
-- run external tool by default
-- default external tool command
+## 设置项
 
-## Development
+项目级设置包括：
 
-Build:
+- 默认 worktree 路径模板
+- 默认复制 `.idea`
+- 默认复制 `.worktree-copy` 文件
+- 默认创建后作为项目打开
+- 默认运行外部工具
+- 默认外部工具命令
+
+## 开发
+
+构建：
 
 ```bash
 ./gradlew buildPlugin
 ```
 
-Test:
+测试：
 
 ```bash
 ./gradlew test

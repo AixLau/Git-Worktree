@@ -14,10 +14,13 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
+import com.intellij.openapi.startup.StartupManager
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.PopupHandler
 import com.intellij.ui.ScrollPaneFactory
 import com.intellij.ui.treeStructure.Tree
+import git4idea.repo.GitRepository
+import git4idea.repo.GitRepositoryChangeListener
 import git4idea.repo.GitRepositoryManager
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
@@ -68,6 +71,11 @@ class WorktreePanel(private val project: Project) : JPanel(BorderLayout()), Data
 
         add(ScrollPaneFactory.createScrollPane(tree), BorderLayout.CENTER)
 
+        project.messageBus.connect(project).subscribe(
+            GitRepository.GIT_REPO_CHANGE,
+            GitRepositoryChangeListener { refresh() }
+        )
+        StartupManager.getInstance(project).runAfterOpened { refresh() }
         refresh()
     }
     private fun setupToolbar() {
@@ -148,15 +156,10 @@ class WorktreePanel(private val project: Project) : JPanel(BorderLayout()), Data
     private fun loadRepoStates(): List<RepoViewState> {
         val repoManager = GitRepositoryManager.getInstance(project)
         val manager = GitWorktreeManager.getInstance()
-        val openProjectRoots = ProjectManager.getInstance().openProjects
-            .mapNotNull { it.basePath }
-            .map { File(it).absolutePath }
-            .toSet()
 
         return repoManager.repositories.map { repo ->
             val repoRoot = repo.root.path
             val worktreeNodes = manager.listWorktrees(project, repo)
-                .filterNot { File(it.path).absolutePath in openProjectRoots }
                 .map { WorktreeNode(it, repoRoot) }
 
             RepoViewState(

@@ -1,4 +1,5 @@
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.intellij.platform.gradle.tasks.PrepareSandboxTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.File
 
@@ -79,14 +80,12 @@ intellijPlatform {
     }
 }
 
-extensions.findByType(org.jetbrains.intellij.platform.gradle.extensions.IntelliJPlatformPluginsExtension::class.java)
-    ?.apply {
-        // Avoid loading the bundled Full Line plugin which fails descriptor creation in 2025.3.
-        disablePlugin("org.jetbrains.completion.full.line")
-        disablePlugin("fullLine")
+tasks {
+    withType<PrepareSandboxTask>().configureEach {
+        // 2025.3 bundles Full Line; its YAML module emits a descriptor warning in sandboxed test/runtime startup.
+        disabledPlugins.addAll("org.jetbrains.completion.full.line", "fullLine")
     }
 
-tasks {
     test {
         useJUnitPlatform()
         // IntelliJ test sandbox installs a custom system class loader, which makes JDK CDS log a warning on startup.

@@ -1,11 +1,11 @@
-# Git Worktree 1.0.2
+# Git Worktree 1.0.3
 
 ## 本次更新
 
-- 点击“确认”后，若分支占用/缺失/无法快进，会自动勾选“创建新分支”并填写建议名称。
-- 不再显示黄色警告边框，改为鼠标悬停在“创建新分支”时弹出原因气泡提示。
-- 优化远程分支解析与校验流程，并补充对应测试。
+- 修复 Worktree 面板首次打开与创建后列表不刷新的问题。
+- 面板工具栏移除删除按钮，降低误操作风险。
+- 处理 2025.3 平台 `fullLine` 模块带来的构建告警，打包流程更稳定。
 
 ## 打包产物
 
-- `build/distributions/git-worktree-intellij-1.0.2.zip`
+- `build/distributions/git-worktree-intellij-1.0.3.zip`

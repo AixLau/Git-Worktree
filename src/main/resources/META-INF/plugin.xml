@@ -1,10 +1,12 @@
 <idea-plugin>
     <id>com.github.gitworktree</id>
-    <name>Git Worktree</name>
+    <name>Git Worktree Tools</name>
     <vendor>aix</vendor>
     <resource-bundle>messages.GitWorktreeBundle</resource-bundle>
     <description><![CDATA[
-        直接在 IntelliJ IDEA 中管理 Git Worktree，支持创建、查看、删除、锁定、解锁、快速切换与跨 Worktree 文件对比。
+        Git Worktree manager for IntelliJ IDEA. Create, inspect, remove, lock, unlock, quickly switch, and compare files across worktrees directly inside the IDE.
+
+        支持在 IntelliJ IDEA 中直接管理 Git Worktree，包括创建、查看、删除、锁定、解锁、快速切换以及跨 Worktree 文件对比。
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>

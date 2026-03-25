@@ -20,6 +20,9 @@ val bundledPlugins = providers.gradleProperty("platformBundledPlugins").get()
     .filter(String::isNotEmpty)
     .toMutableList()
     .apply {
+        if ("org.jetbrains.idea.maven" !in this) {
+            add("org.jetbrains.idea.maven")
+        }
         // Full Line's YAML module depends on the bundled YAML plugin in 2025.3.
         if ("org.jetbrains.plugins.yaml" !in this) {
             add("org.jetbrains.plugins.yaml")

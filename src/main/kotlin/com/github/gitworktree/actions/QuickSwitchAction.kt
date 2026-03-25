@@ -1,6 +1,7 @@
 package com.github.gitworktree.actions
 
 import com.github.gitworktree.GitWorktreeBundle
+import com.github.gitworktree.GitWorktreeDataKeys
 import com.github.gitworktree.git.GitWorktreeManager
 import com.github.gitworktree.model.WorktreeInfo
 import com.intellij.openapi.application.ApplicationManager
@@ -16,14 +17,20 @@ import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.ui.popup.PopupStep
 import com.intellij.openapi.ui.popup.util.BaseListPopupStep
 import com.intellij.openapi.project.ProjectManager
+import com.intellij.openapi.vfs.LocalFileSystem
 import git4idea.repo.GitRepositoryManager
 import java.io.File
 import java.nio.file.Path
+import java.util.concurrent.TimeUnit
 
 class QuickSwitchAction : AnAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
+        e.getData(GitWorktreeDataKeys.SELECTED_WORKTREE)?.let { selectedWorktree ->
+            openWorktreeAsProject(project, selectedWorktree)
+            return
+        }
         val dataContext = e.dataContext
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, GitWorktreeBundle.message("quick.switch.title"), false) {
             override fun run(indicator: ProgressIndicator) {
@@ -86,7 +93,47 @@ class QuickSwitchAction : AnAction() {
             ProjectUtil.openOrImport(path, OpenProjectTask {
                 forceOpenInNewFrame = true
                 projectToClose = null
+                runConfigurators = true
             })
+            importMavenProjectsWhenOpened(worktree.path)
+        }
+
+        private fun importMavenProjectsWhenOpened(worktreePath: String) {
+            ApplicationManager.getApplication().executeOnPooledThread {
+                repeat(20) {
+                    val openedProject = ProjectManager.getInstance().openProjects
+                        .firstOrNull { it.basePath == worktreePath && !it.isDisposed }
+                    if (openedProject != null) {
+                        importMavenProjects(openedProject, worktreePath)
+                        return@executeOnPooledThread
+                    }
+                    TimeUnit.MILLISECONDS.sleep(500)
+                }
+            }
+        }
+
+        private fun importMavenProjects(project: Project, worktreePath: String) {
+            val baseDir = LocalFileSystem.getInstance().refreshAndFindFileByPath(worktreePath) ?: return
+            val pomFiles = baseDir.children
+                ?.filter { !it.isDirectory && it.name.equals("pom.xml", ignoreCase = true) }
+                .orEmpty()
+            if (pomFiles.isEmpty()) {
+                return
+            }
+
+            ApplicationManager.getApplication().invokeLater {
+                if (project.isDisposed) {
+                    return@invokeLater
+                }
+
+                runCatching {
+                    val managerClass = Class.forName("org.jetbrains.idea.maven.project.MavenProjectsManager")
+                    val getInstance = managerClass.getMethod("getInstance", Project::class.java)
+                    val manager = getInstance.invoke(null, project)
+                    val importMethod = managerClass.getMethod("addManagedFilesOrUnignore", java.util.List::class.java)
+                    importMethod.invoke(manager, pomFiles)
+                }
+            }
         }
     }
 }
